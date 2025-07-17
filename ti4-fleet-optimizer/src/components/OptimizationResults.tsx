@@ -60,7 +60,7 @@ export default function OptimizationResults({ trigger, onComplete }: Props) {
           </div>
           <div style={styles.rightCol}>
             <p style={styles.hitsLabel}>Average Hits per Round</p>
-            <p style={styles.hitsValue}>{result.totalHits.toFixed(2)}</p>
+            <p style={styles.hitsValue}>{result.totalHits.toFixed(2)} 💥</p>
           </div>
         </div>
       )}
