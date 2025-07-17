@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useDeepSeek } from "../hooks/useDeepSeek";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function DeepSeekAdvice() {
   const [goal, setGoal] = useState("");
@@ -39,14 +41,13 @@ export default function DeepSeekAdvice() {
       {advice && (
         <div style={styles.adviceBox}>
           <h3>Advice</h3>
-          <p>{advice}</p>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{advice}</ReactMarkdown>
         </div>
       )}
     </form>
   );
 }
 
-// Example inline styles—you can adjust size/colors to match your theme
 const styles = {
   form: {
     width: "80%",

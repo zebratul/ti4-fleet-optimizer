@@ -1,3 +1,4 @@
+// src/hooks/useDeepSeek.ts
 import { useState, useCallback } from "react";
 
 export function useDeepSeek() {
@@ -11,25 +12,17 @@ export function useDeepSeek() {
       setError(null);
 
       try {
-        const res = await fetch("https://openrouter.ai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "deepseek/deepseek-chat-v3-0324:free",
-            messages: [
-              { role: "system", content: "You are a strategic advisor for a tabletop game Twilight Imperium, 4th edition. Based on the user prompt, provide short advice on how to counter-play your enemies." },
-              { role: "user", content: `Goal: ${goal}\nEnemies: ${enemies.join(", ")}` },
-            ],
-            temperature: 0.7,
-            max_tokens: 200,
-          }),
-        });
+        const res = await fetch(
+          "https://deepseek-free-2iej.onrender.com/api/deepseek",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ goal, enemies }),
+          }
+        );
 
         if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
+          throw new Error(`Proxy error: ${res.status}`);
         }
 
         const json = await res.json();
