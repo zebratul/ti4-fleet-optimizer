@@ -116,6 +116,16 @@ const styles = {
     fontSize: "1.2rem",
     marginRight: "1.5rem",
   },
+    select: {
+    marginLeft: "0.5rem",
+    fontSize: "1.25rem",
+    padding: "0.5rem",
+    borderRadius: "0.5rem",
+    backgroundColor: "#333",
+    color: "#fff",
+    border: "1px solid #555",
+    minWidth: "200px",
+  },
   button: {
     fontSize: "1.4rem",
     padding: "0.75rem 2rem",
