@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import useFleetOptimizer from "../hooks/useFleetOptimizer";
 import type { FleetResult } from "../hooks/useFleetOptimizer";
+import { useFleetContext } from "../context/FleetContext";
+
+import { SHIP_DATA } from "../data/ships";
+import { FACTION_UNITS } from "../data/factionUnits";
 
 import fighterImg from "../assets/fighter.png";
 import destroyerImg from "../assets/destroyer.png";
@@ -12,7 +16,7 @@ import warsunImg from "../assets/warsun.png";
 
 type Props = { trigger: boolean; onComplete: () => void };
 
-// Map ShipType strings to the imported image modules
+// Map base types to icons
 const shipIcons: Record<string, string> = {
   fighter: fighterImg,
   destroyer: destroyerImg,
@@ -25,7 +29,25 @@ const shipIcons: Record<string, string> = {
 
 export default function OptimizationResults({ trigger, onComplete }: Props) {
   const [ready, setReady] = useState(false);
+  const { constraints } = useFleetContext();
+  const { selectedFaction } = constraints;
   const result: FleetResult = useFleetOptimizer(trigger);
+
+  // Build a lookup from ship key → ShipStats (so uniques and base both covered)
+  const statsMap: Record<string, typeof SHIP_DATA["fighter"]> = {
+    // base ships
+    ...Object.fromEntries(
+      (Object.keys(SHIP_DATA) as Array<keyof typeof SHIP_DATA>).map((key) => [
+        key,
+        SHIP_DATA[key],
+      ])
+    ),
+    // faction uniques
+    ...(FACTION_UNITS[selectedFaction] || []).reduce((acc, { key, stats }) => {
+      acc[key] = stats;
+      return acc;
+    }, {} as Record<string, typeof SHIP_DATA["fighter"]>),
+  };
 
   useEffect(() => {
     if (trigger) {
@@ -45,22 +67,34 @@ export default function OptimizationResults({ trigger, onComplete }: Props) {
       ) : (
         <div style={styles.columns}>
           <div style={styles.leftCol}>
-            {result.build.map(({ ship, count }) => (
-              <div key={ship} style={styles.shipRow}>
-                <img
-                  src={shipIcons[ship]}
-                  alt={ship}
-                  style={styles.icon}
-                />
-                <span style={styles.shipText}>
-                  {count}× {ship.charAt(0).toUpperCase() + ship.slice(1)}
-                </span>
-              </div>
-            ))}
+            {result.build.map(({ ship: key, count }) => {
+              const stats = statsMap[key];
+              const type = stats?.type || "fighter"; // fallback
+              const icon = shipIcons[type];
+
+              return (
+                <div key={key} style={styles.shipRow}>
+                  <img src={icon} alt={type} style={styles.icon} />
+                  <span style={styles.shipText}>
+                    {count}× {stats.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
           <div style={styles.rightCol}>
             <p style={styles.hitsLabel}>Average Hits per Round</p>
             <p style={styles.hitsValue}>{result.totalHits.toFixed(2)} 💥</p>
+
+            {result.totalAFB > 0 && (
+              <>
+                <p style={styles.hitsLabel}>Avg Anti‑Fighter Barrage Hits</p>
+                <p style={styles.hitsValue}>{result.totalAFB.toFixed(2)} 🔥</p>
+              </>
+            )}
+
+            <p style={styles.hitsLabel}>Total Fleet Durability</p>
+            <p style={styles.hitsValue}>{result.totalDurability} 🛡️</p>
           </div>
         </div>
       )}
@@ -91,6 +125,7 @@ const styles = {
     flexDirection: "column" as const,
     justifyContent: "center" as const,
     alignItems: "center" as const,
+    gap: "1rem",
   },
   shipRow: {
     display: "flex",
@@ -103,6 +138,6 @@ const styles = {
     marginRight: "1rem",
   },
   shipText: { fontSize: "1.3rem" },
-  hitsLabel: { fontSize: "1.25rem", marginBottom: "0.5rem" },
-  hitsValue: { fontSize: "3rem", fontWeight: "bold" },
+  hitsLabel: { fontSize: "1.25rem", marginBottom: "0.25rem" },
+  hitsValue: { fontSize: "2rem", fontWeight: "bold" },
 };

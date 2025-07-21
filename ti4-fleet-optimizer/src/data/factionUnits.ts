@@ -255,7 +255,7 @@ export const FACTION_UNITS: Record<
       key: "lizixDreadnought",
       stats: {
         name: "Super-Dreadnought",
-        type: "destroyer",
+        type: "dreadnought",
         fs: 1,
         cap: 2,
         cost: 4,
