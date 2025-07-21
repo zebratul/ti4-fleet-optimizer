@@ -74,7 +74,7 @@ export default function useFleetOptimizer(trigger = false): FleetResult {
           if (!cnt) continue;
           hits += cnt * stats.dice * (11 - stats.combat) / 10;
           if (stats.afb) afb += cnt * stats.afb.dice * (11 - stats.afb.combat) / 10;
-          hp += cnt * stats.hitPoints + (stats.sustainDamage ? cnt : 0);
+          hp += cnt * stats.hitPoints;
         }
         if (hits > best.totalHits) {
           best = {
