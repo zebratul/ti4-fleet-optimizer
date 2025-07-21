@@ -6,13 +6,13 @@ import { useFleetContext } from "../context/FleetContext";
 import { SHIP_DATA } from "../data/ships";
 import { FACTION_UNITS } from "../data/factionUnits";
 
-import fighterImg from "../assets/fighter.png";
-import destroyerImg from "../assets/destroyer.png";
-import cruiserImg from "../assets/cruiser.png";
-import carrierImg from "../assets/carrier.png";
-import dreadnoughtImg from "../assets/dreadnought.png";
-import flagshipImg from "../assets/flagship.png";
-import warsunImg from "../assets/warsun.png";
+import fighterImg from "../assets/fighter.png?inline";
+import destroyerImg from "../assets/destroyer.png?inline";
+import cruiserImg from "../assets/cruiser.png?inline";
+import carrierImg from "../assets/carrier.png?inline";
+import dreadnoughtImg from "../assets/dreadnought.png?inline";
+import flagshipImg from "../assets/flagship.png?inline";
+import warsunImg from "../assets/warsun.png?inline";
 
 type Props = { trigger: boolean; onComplete: () => void };
 
