@@ -14,7 +14,9 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center" as const,
-    width: "100%",
+    width: "900px",
+    minWidth: "550px",
+    padding: "1rem",
   },
   heading: {
     fontSize: "2.5rem",

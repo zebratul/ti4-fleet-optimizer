@@ -1,3 +1,4 @@
+// OptimizePage.tsx
 import { useState } from "react";
 import ConstraintsForm from "../components/ConstraintsForm";
 import OptimizationResults from "../components/OptimizationResults";
@@ -19,7 +20,9 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center" as const,
-    width: "40%",
+    width: "900px",
+    minWidth: "550px",
+    padding: "1rem",
   },
   heading: {
     fontSize: "2.5rem",

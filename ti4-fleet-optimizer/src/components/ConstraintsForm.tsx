@@ -1,20 +1,28 @@
 import { useFleetContext } from "../context/FleetContext";
 import { SHIP_DATA } from "../data/ships";
+import { FACTION_UNITS } from "../data/factionUnits";
 
-type Props = { onCalculate: () => void };
-
-export default function ConstraintsForm({ onCalculate }: Props) {
+export default function ConstraintsForm({ onCalculate }: { onCalculate: () => void }) {
   const { constraints, setConstraints } = useFleetContext();
 
+  // handle numeric inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setConstraints(prev => ({ ...prev, [name]: parseInt(value) }));
   };
+
+  // handle faction select
+  const handleFaction = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setConstraints(prev => ({ ...prev, selectedFaction: e.target.value }));
+  };
+
+  // toggles
   const toggleUpgrade = (ship: string) =>
     setConstraints(prev => ({
       ...prev,
       upgrades: { ...prev.upgrades, [ship]: !prev.upgrades[ship] },
     }));
+
   const toggleSpacedock = () =>
     setConstraints(prev => ({ ...prev, spacedock: !prev.spacedock }));
 
@@ -35,6 +43,20 @@ export default function ConstraintsForm({ onCalculate }: Props) {
             />
           </label>
         ))}
+      </div>
+
+      <div style={styles.section}>
+        <h3 style={styles.subheading}>Select Faction</h3>
+        <select
+          value={constraints.selectedFaction}
+          onChange={handleFaction}
+          style={styles.select}
+        >
+          <option value="None">None</option>
+          {Object.keys(FACTION_UNITS).map((fac) => (
+            <option key={fac} value={fac}>{fac}</option>
+          ))}
+        </select>
       </div>
 
       <div style={styles.section}>

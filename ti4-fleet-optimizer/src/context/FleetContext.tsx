@@ -1,12 +1,13 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState,  } from "react";
 import type { ReactNode } from "react";
 
-type Constraints = {
+export type Constraints = {
   resources: number;
   fleetSupply: number;
   production: number;
-  upgrades: { [key: string]: boolean };
+  upgrades: Record<string, boolean>;
   spacedock: boolean;
+  selectedFaction: string;      // ← new
 };
 
 const defaultConstraints: Constraints = {
@@ -19,7 +20,8 @@ const defaultConstraints: Constraints = {
     cruiser: false,
     carrier: false,
   },
-  spacedock: true, 
+  spacedock: false,
+  selectedFaction: "None",     // ← default
 };
 
 const FleetContext = createContext<{

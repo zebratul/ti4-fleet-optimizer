@@ -1,86 +1,84 @@
-// src/hooks/useFleetOptimizer.ts
 import { useFleetContext } from "../context/FleetContext";
 import { SHIP_DATA } from "../data/ships";
 import type { ShipType, ShipStats } from "../data/ships";
+import { FACTION_UNITS } from "../data/factionUnits";
 import { useMemo } from "react";
 
 export type FleetResult = {
-  build: { ship: ShipType; count: number }[];
+  build: { ship: string; count: number }[];
   totalHits: number;
+  totalAFB: number;      // new
+  totalDurability: number; // new
 };
 
 export default function useFleetOptimizer(trigger: boolean = false): FleetResult {
   const { constraints } = useFleetContext();
 
   return useMemo(() => {
-    const { resources, production, fleetSupply, upgrades, spacedock } = constraints;
+    const { resources, production, fleetSupply, upgrades, spacedock, selectedFaction } = constraints;
 
-    // 1) Build array of ship types with effective stats (applying upgrades)
-    let ships: { type: ShipType; stats: ShipStats }[] = (
-      Object.keys(SHIP_DATA) as ShipType[]
-    ).map((type) => {
+    // 1) Prepare ship pool
+    const baseShips = (Object.keys(SHIP_DATA) as ShipType[]).map((type) => {
       const base = SHIP_DATA[type];
-      const upgraded = upgrades[type] && base.upgraded
+      const effective = upgrades[type] && base.upgraded
         ? { ...base, ...base.upgraded }
         : base;
-      return {
-        type,
-        stats: {
-          ...upgraded,
-          dice: base.dice, // dice count never changes
-        },
-      };
+      return { key: type, stats: { ...effective, dice: base.dice } };
     });
 
-    // ─── Sort so capacity‑providers come first, fighters (cap < 0) last ──────────
-    ships.sort((a, b) => b.stats.cap - a.stats.cap);
+    const unique = FACTION_UNITS[selectedFaction] || [];
 
-    let best: FleetResult = { build: [], totalHits: 0 };
+    // combine and sort by cap so providers come first
+    const ships = [...baseShips, ...unique].sort((a, b) => b.stats.cap - a.stats.cap);
 
-    // 2) DFS/backtracking with pruning
+    let best = { build: [] as FleetResult["build"], totalHits: 0, totalAFB: 0, totalDurability: 0 };
+
     const dfs = (
       idx: number,
       remProd: number,
       remRes: number,
       remFS: number,
       remCap: number,
-      current: Partial<Record<ShipType, number>>
+      current: Partial<Record<string, number>>
     ) => {
-      console.log('calculating');
-      
-      // If we've assigned all production or run out of types, evaluate
       if (idx === ships.length || remProd === 0) {
-        let hits = 0;
-        const build: FleetResult["build"] = [];
-
-        for (const { type, stats } of ships) {
-          const cnt = current[type] ?? 0;
-          if (cnt > 0) {
-            build.push({ ship: type, count: cnt });
-            hits += cnt * stats.dice * (11 - stats.combat) / 10;
+        // evaluate
+        let hits = 0, afb = 0, hp = 0;
+        for (const { key, stats } of ships) {
+          const cnt = current[key] ?? 0;
+          if (cnt === 0) continue;
+          // combat hits
+          hits += cnt * stats.dice * (11 - stats.combat) / 10;
+          // AFB hits if available
+          if (stats.afb) {
+            afb += cnt * stats.afb.dice * (11 - stats.afb.combat) / 10;
           }
+          // durability
+          hp += cnt * stats.hitPoints;
+          if (stats.sustainDamage) hp += cnt; // add extra HP for sustain
         }
-
-        if (hits > best.totalHits) {
-          best = { build, totalHits: hits };
-        }
+          if (hits > best.totalHits) {
+            best = {
+              build: Object.entries(current)
+                .filter(([, c]) => (c ?? 0) > 0)
+                .map(([ship, c]) => ({ ship, count: c! })),
+              totalHits: hits,
+              totalAFB: afb,
+              totalDurability: hp,
+            };
+          }
         return;
       }
 
-      const { type, stats } = ships[idx];
-
-      // Compute max possible count by each constraint
+      const { key, stats } = ships[idx];
       const maxByProd = remProd;
       const maxByRes = Math.floor(remRes / stats.cost);
       const maxByFS = stats.fs > 0 ? Math.floor(remFS / stats.fs) : Infinity;
-      const maxByCap = stats.cap < 0
-        ? Math.floor(remCap / (-stats.cap))
-        : Infinity;
-
+      const maxByCap = stats.cap < 0 ? Math.floor(remCap / (-stats.cap)) : Infinity;
       const maxCount = Math.min(maxByProd, maxByRes, maxByFS, maxByCap);
 
       for (let cnt = 0; cnt <= maxCount; cnt++) {
-        current[type] = cnt;
+        current[key] = cnt;
         dfs(
           idx + 1,
           remProd - cnt,
@@ -90,12 +88,10 @@ export default function useFleetOptimizer(trigger: boolean = false): FleetResult
           current
         );
       }
-
-      delete current[type];
+      delete current[key];
     };
 
-    const initialCap = spacedock ? 3 : 0;
-    dfs(0, production, resources, fleetSupply, initialCap, {});
+    dfs(0, production, resources, fleetSupply, spacedock ? 3 : 0, {});
 
     return best;
   }, [constraints, trigger]);
