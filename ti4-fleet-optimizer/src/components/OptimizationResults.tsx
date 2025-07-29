@@ -59,85 +59,34 @@ export default function OptimizationResults({ trigger, onComplete }: Props) {
   if (!ready) return null;
 
   return (
-    <div style={styles.form}>
-      <h2 style={styles.heading}>Optimal Fleet</h2>
+    <div className="card">
+      <h2>Optimal Fleet</h2>
 
       {result.build.length === 0 ? (
-        <p style={styles.noResult}>No viable fleet found.</p>
+        <p>No viable fleet found.</p>
       ) : (
-        <div style={styles.columns}>
-          <div style={styles.leftCol}>
+        <div className="results">
+          <div className="left">
             {result.build.map(({ ship: key, count }) => {
               const stats = statsMap[key];
-              const type = stats?.type || "fighter"; // fallback
-              const icon = shipIcons[type];
-
+              const icon = shipIcons[stats.type];
               return (
-                <div key={key} style={styles.shipRow}>
-                  <img src={icon} alt={type} style={styles.icon} />
-                  <span style={styles.shipText}>
-                    {count}× {stats.name}
-                  </span>
+                <div key={key} className="ship-row">
+                  <img src={icon} alt={stats.type} width={40} height={40} decoding="async" />
+                  <span>{count}× {stats.name}</span>
                 </div>
               );
             })}
           </div>
-          <div style={styles.rightCol}>
-            <p style={styles.hitsLabel}>Average Hits per Round</p>
-            <p style={styles.hitsValue}>{result.totalHits.toFixed(2)} 💥</p>
-
+          <div className="right">
+            <p><strong>Avg Hits / Round:</strong> {result.totalHits.toFixed(2)} 💥</p>
             {result.totalAFB > 0 && (
-              <>
-                <p style={styles.hitsLabel}>Avg Anti‑Fighter Barrage Hits</p>
-                <p style={styles.hitsValue}>{result.totalAFB.toFixed(2)} 🔥</p>
-              </>
+              <p><strong>AFB Hits:</strong> {result.totalAFB.toFixed(2)} 🔥</p>
             )}
-
-            <p style={styles.hitsLabel}>Total Fleet Durability</p>
-            <p style={styles.hitsValue}>{result.totalDurability} 🛡️</p>
+            <p><strong>Durability:</strong> {result.totalDurability} 🛡️</p>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  form: {
-    width: "80%",
-    maxWidth: "800px",
-    backgroundColor: "#1a1a1a",
-    padding: "2rem",
-    borderRadius: "1.5rem",
-    boxShadow: "0 0 15px rgba(0,0,0,0.7)",
-    textAlign: "center" as const,
-  },
-  heading: { fontSize: "2rem", marginBottom: "1.5rem" },
-  noResult: { fontSize: "1.25rem" },
-  columns: {
-    display: "flex",
-    justifyContent: "space-between",
-  },
-  leftCol: { textAlign: "left" as const, flex: 1 },
-  rightCol: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column" as const,
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-    gap: "1rem",
-  },
-  shipRow: {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: "1rem",
-  },
-  icon: {
-    width: "48px",
-    height: "48px",
-    marginRight: "1rem",
-  },
-  shipText: { fontSize: "1.3rem" },
-  hitsLabel: { fontSize: "1.25rem", marginBottom: "0.25rem" },
-  hitsValue: { fontSize: "2rem", fontWeight: "bold" },
-};
