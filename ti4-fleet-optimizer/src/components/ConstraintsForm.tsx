@@ -3,6 +3,8 @@ import { SHIP_DATA } from "../data/ships";
 import { FACTION_UNITS } from "../data/factionUnits";
 import { FACTION_ICONS } from "../data/icons";
 
+import CountCard from "./CountCard";
+
 import fighterIcon from "../assets/fighter.png?inline";
 import destroyerIcon from "../assets/destroyer.png?inline";
 import cruiserIcon from "../assets/cruiser.png?inline";
@@ -21,68 +23,83 @@ const SHIP_ICONS: Record<string, string> = {
   warsun: warsunIcon,
 };
 
-export default function ConstraintsForm({ onCalculate }: { onCalculate: () => void }) {
+export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }) {
   const { constraints, setConstraints } = useFleetContext();
+  const { resources, fleetSupply, production, upgrades, spacedock, selectedFaction } = constraints;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setConstraints(prev => ({ ...prev, [name]: parseInt(value) }));
+  // helpers to adjust numeric constraints
+  const changeConstraint = (key: "resources" | "fleetSupply" | "production", delta: number) => {
+    setConstraints((prev) => ({
+      ...prev,
+      [key]: Math.max(0, prev[key] + delta),
+    }));
   };
 
-  const handleFaction = (f: string) =>
-    setConstraints(prev => ({ ...prev, selectedFaction: f }));
-
-  const toggleUpgrade = (ship: string) =>
-    setConstraints(prev => ({
-      ...prev,
-      upgrades: { ...prev.upgrades, [ship]: !prev.upgrades[ship] },
-    }));
-
-  const toggleSpacedock = () =>
-    setConstraints(prev => ({ ...prev, spacedock: !prev.spacedock }));
+  // remaining handlers
+  const handleFaction = (f: string) => setConstraints((p) => ({ ...p, selectedFaction: f }));
+  const toggleUpgrade = (ship: string) => setConstraints((p) => ({
+    ...p,
+    upgrades: { ...p.upgrades, [ship]: !p.upgrades[ship] },
+  }));
+  const toggleSpacedock = () => setConstraints((p) => ({ ...p, spacedock: !p.spacedock }));
 
   return (
     <div className="card">
       <h2>Build Constraints</h2>
 
-      {/* Numeric inputs */}
-      {["resources", "fleetSupply", "production"].map((field) => (
-        <label key={field}>
-          {field.charAt(0).toUpperCase() + field.slice(1)}
-          <input
-            type="number"
-            name={field}
-            value={(constraints as any)[field]}
-            onChange={handleChange}
-          />
-        </label>
-      ))}
+      {/* Numeric as CountCards */}
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+        <CountCard
+          name="Resources"
+          count={resources}
+          onIncrement={() => changeConstraint("resources", +1)}
+          onDecrement={() => changeConstraint("resources", -1)}
+          isUpgraded={false}
+          onToggleUpgrade={() => {}}
+        />
+        <CountCard
+          name="Fleet Supply"
+          count={fleetSupply}
+          onIncrement={() => changeConstraint("fleetSupply", +1)}
+          onDecrement={() => changeConstraint("fleetSupply", -1)}
+          isUpgraded={false}
+          onToggleUpgrade={() => {}}
+        />
+        <CountCard
+          name="Production"
+          count={production}
+          onIncrement={() => changeConstraint("production", +1)}
+          onDecrement={() => changeConstraint("production", -1)}
+          isUpgraded={false}
+          onToggleUpgrade={() => {}}
+        />
+      </div>
 
       {/* Faction selector */}
       <h3>Select Faction</h3>
       <div className="faction-grid">
         <div
-          className={`faction-card ${constraints.selectedFaction === "None" ? "selected" : ""}`}
+          className={`faction-card ${selectedFaction === "None" ? "selected" : ""}`}
           onClick={() => handleFaction("None")}
         >
-          <span>None</span>
+          None
         </div>
         {Object.keys(FACTION_UNITS).map((fac) => (
           <div
             key={fac}
-            className={`faction-card ${constraints.selectedFaction === fac ? "selected" : ""}`}
+            className={`faction-card ${selectedFaction === fac ? "selected" : ""}`}
             onClick={() => handleFaction(fac)}
           >
             <img src={FACTION_ICONS[fac]} alt={fac} width={32} height={32} decoding="async" />
-            <span>{fac}</span>
+            {fac}
           </div>
         ))}
       </div>
 
-      {/* Upgrades selector */}
-      <h3>Unit Upgrades</h3>
+      {/* Unit Upgrades */}
+      <h3>Unit Tech Upgrades</h3>
       <div className="faction-grid">
-        {Object.entries(constraints.upgrades).map(([ship, on]) => {
+        {Object.entries(upgrades).map(([ship, on]) => {
           const base = SHIP_DATA[ship as keyof typeof SHIP_DATA];
           return (
             <div
@@ -97,20 +114,20 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate: () => vo
                 height={24}
                 decoding="async"
               />
-              <span>{base.name}</span>
+              {base.name}
             </div>
           );
         })}
       </div>
 
-      {/* Spacedock selector */}
-      <h3>Building at a Spacedock</h3>
+      {/* Spacedock toggle */}
+      <h3>Spacedock</h3>
       <div className="faction-grid">
         <div
-          className={`faction-card ${constraints.spacedock ? "selected" : ""}`}
+          className={`faction-card ${spacedock ? "selected" : ""}`}
           onClick={toggleSpacedock}
         >
-          <span>+3 Fighter Capacity</span>
+          +3 Fighter Capacity
         </div>
       </div>
 

@@ -8,8 +8,8 @@ export default function OptimizePage() {
 
   return (
     <>
-      <OptimizationResults trigger={calculate} onComplete={() => setCalculate(false)} />
       <ConstraintsForm onCalculate={() => setCalculate(true)} />
+      <OptimizationResults trigger={calculate} onComplete={() => setCalculate(false)} />
     </>
   );
 }

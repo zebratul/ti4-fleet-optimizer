@@ -1,5 +1,5 @@
 type CountCardProps = {
-  icon: string;
+  icon?: string;
   name: string;
   count: number;
   isUpgraded: boolean;
@@ -22,12 +22,14 @@ export default function CountCard({
       <div className="arrow up" onClick={onIncrement}>▲</div>
 
       <div className="body">
-        <div
-          className={`icon-box ${isUpgraded ? "upgraded" : ""}`}
-          onClick={onToggleUpgrade}
-        >
-          <img src={icon} alt={name} decoding="async" />
-        </div>
+        {icon && (
+          <div
+            className={`icon-box ${isUpgraded ? "upgraded" : ""}`}
+            onClick={onToggleUpgrade}
+          >
+            <img src={icon} alt={name} decoding="async" />
+         </div>
+        )}
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
           <span>{name}</span>
