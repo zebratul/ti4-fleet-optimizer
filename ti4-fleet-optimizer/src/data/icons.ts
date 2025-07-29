@@ -32,7 +32,7 @@ export const FACTION_ICONS: Record<string, string> = {
   "Ghosts of Creuss": creuss,
   Empyrean: empyrian,
   "Emirates of Hacan": hacan,
-  "Universities of Jol‑Nar": jolnar,
+  "Jol‑Nar": jolnar,
   "The Council Keleres": keleres,
   "L1Z1X Mindnet": lizix,
   "Mahact Gene Sorcerers": mahact,
