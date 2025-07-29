@@ -103,7 +103,6 @@ export default function StatsCalculator() {
 
   return (
     <>
-      {/* Faction selector */}
       <h3>Select Faction</h3>
       <div className="faction-grid">
         <div
@@ -124,7 +123,6 @@ export default function StatsCalculator() {
         ))}
       </div>
 
-      {/* Ship counts */}
       <h3>Enter Your Ships</h3>
       <div className="upgrade-grid">
         {shipList.map(({ key, stats }) => {
@@ -144,10 +142,8 @@ export default function StatsCalculator() {
         })}
       </div>
 
-      {/* Reset & (no explicit calculate, updates live) */}
       <button onClick={() => setCounts(makeZeroCounts())}>Reset Fleet</button>
 
-      {/* Results */}
       <div className="results">
         <div className="left">
           <p><strong>Avg Hits:</strong> {result.hits.toFixed(2)} 💥</p>

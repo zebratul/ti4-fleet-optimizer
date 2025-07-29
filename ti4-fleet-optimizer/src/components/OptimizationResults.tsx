@@ -16,7 +16,6 @@ import warsunImg from "../assets/warsun.png?inline";
 
 type Props = { trigger: boolean; onComplete: () => void };
 
-// Map base types to icons
 const shipIcons: Record<string, string> = {
   fighter: fighterImg,
   destroyer: destroyerImg,

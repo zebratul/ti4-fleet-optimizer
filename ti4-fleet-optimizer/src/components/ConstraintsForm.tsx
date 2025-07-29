@@ -27,7 +27,6 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
   const { constraints, setConstraints } = useFleetContext();
   const { resources, fleetSupply, production, upgrades, spacedock, selectedFaction } = constraints;
 
-  // helpers to adjust numeric constraints
   const changeConstraint = (key: "resources" | "fleetSupply" | "production", delta: number) => {
     setConstraints((prev) => ({
       ...prev,
@@ -35,7 +34,6 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
     }));
   };
 
-  // remaining handlers
   const handleFaction = (f: string) => setConstraints((p) => ({ ...p, selectedFaction: f }));
   const toggleUpgrade = (ship: string) => setConstraints((p) => ({
     ...p,
@@ -47,8 +45,7 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
     <div className="card">
       <h2>Build Constraints</h2>
 
-      {/* Numeric as CountCards */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem", justifyContent: "space-evenly" }}>
         <CountCard
           name="Resources"
           count={resources}
@@ -75,7 +72,6 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
         />
       </div>
 
-      {/* Faction selector */}
       <h3>Select Faction</h3>
       <div className="faction-grid">
         <div
@@ -96,7 +92,6 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
         ))}
       </div>
 
-      {/* Unit Upgrades */}
       <h3>Unit Tech Upgrades</h3>
       <div className="faction-grid">
         {Object.entries(upgrades).map(([ship, on]) => {
@@ -120,7 +115,6 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
         })}
       </div>
 
-      {/* Spacedock toggle */}
       <h3>Spacedock</h3>
       <div className="faction-grid">
         <div
