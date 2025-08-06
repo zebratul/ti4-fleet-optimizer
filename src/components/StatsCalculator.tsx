@@ -1,7 +1,6 @@
-// src/components/StatsCalculator.tsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import type { ShipType, ShipStats } from "../data/ships";
 import { SHIP_DATA } from "../data/ships";
-import type { ShipType } from "../data/ships";
 import { FACTION_UNITS } from "../data/factionUnits";
 import { FACTION_ICONS } from "../data/icons";
 import CountCard from "./CountCard";
@@ -28,23 +27,20 @@ export default function StatsCalculator() {
   const [faction, setFaction] = useState<string>("None");
   const [upgraded, setUpgraded] = useState<Record<string, boolean>>({});
 
-  const toggleUpgrade = (key: string) => {
-    console.log('upgraded');
-    
+  const toggleUpgrade = (key: string) =>
     setUpgraded((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
-  // 1) Build default list
+  // 1) Base ships list
   const defaultList = useMemo(
     () =>
-      (Object.keys(SHIP_DATA) as ShipType[]).map((k) => ({
-        key: k,
-        stats: SHIP_DATA[k],
+      (Object.keys(SHIP_DATA) as ShipType[]).map((type) => ({
+        key: type,
+        stats: SHIP_DATA[type],
       })),
     []
   );
 
-  // 2) Build unique list
+  // 2) Faction-unique units
   const uniqueList = useMemo(
     () =>
       faction !== "None"
@@ -56,13 +52,13 @@ export default function StatsCalculator() {
     [faction]
   );
 
-  // 3) Filter defaults by unique.stats.type
+  // 3) Remove base types overridden by uniques
   const overriddenTypes = useMemo(
     () => new Set(uniqueList.map((u) => u.stats.type)),
     [uniqueList]
   );
 
-  // 4) Final shipList, sorted by cost ascending
+  // 4) Final ship list, sorted by ascending cost
   const shipList = useMemo(() => {
     const combined = [
       ...defaultList.filter((d) => !overriddenTypes.has(d.stats.type)),
@@ -71,35 +67,53 @@ export default function StatsCalculator() {
     return combined.sort((a, b) => a.stats.cost - b.stats.cost);
   }, [defaultList, overriddenTypes, uniqueList]);
 
-  // initial counts
   const makeZeroCounts = () =>
     Object.fromEntries(shipList.map((s) => [s.key, 0])) as Record<string, number>;
 
   const [counts, setCounts] = useState<Record<string, number>>(makeZeroCounts);
 
-  // reset whenever faction (and thus shipList) changes
-  useMemo(() => {
+  useEffect(() => {
     setCounts(makeZeroCounts());
-  }, [shipList.join(",")]); // re-run when shipList keys change
+    setUpgraded({});
+  }, [shipList]);
 
-  const handleCount = (key: string, v: number) => {
-    setCounts((prev) => ({ ...prev, [key]: Math.max(0, v) }));
-  };
+  const handleIncrement = (key: string) =>
+    setCounts((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+  const handleDecrement = (key: string) =>
+    setCounts((prev) => ({ ...prev, [key]: Math.max(0, (prev[key] || 0) - 1) }));
 
-  // calculate stats
+  // Compute aggregated stats with upgrades applied
   const result = useMemo(() => {
     return shipList.reduce(
-      (acc, { key, stats }) => {
-        const c = counts[key] || 0;
-        if (!c) return acc;
-        acc.hits += c * stats.dice * (11 - stats.combat) / 10;
-        if (stats.afb) acc.afb += c * stats.afb.dice * (11 - stats.afb.combat) / 10;
-        acc.hp += c * stats.hitPoints;
+      (acc, { key, stats: base }) => {
+        const qty = counts[key] || 0;
+        if (!qty) return acc;
+
+        // Determine effective stats: apply upgrade if toggled and an `upgraded` field exists
+        const eff: ShipStats = upgraded[key] && base.upgraded
+          ? {
+              ...base,
+              ...base.upgraded,
+              dice: base.dice,
+              afb: base.upgraded.afb ?? base.afb,
+            }
+          : base;
+
+        acc.hits += qty * eff.dice * (11 - eff.combat) / 10;
+
+        if (eff.afb) {
+          acc.afb += qty * eff.afb.dice * (11 - eff.afb.combat) / 10;
+        }
+
+        acc.hp += qty * eff.hitPoints;
+        if (eff.sustainDamage) {
+          acc.hp += qty;
+        }
         return acc;
       },
       { hits: 0, afb: 0, hp: 0 }
     );
-  }, [counts, shipList]);
+  }, [counts, shipList, upgraded]);
 
   return (
     <>
@@ -117,38 +131,52 @@ export default function StatsCalculator() {
             className={`faction-card ${faction === fac ? "selected" : ""}`}
             onClick={() => setFaction(fac)}
           >
-            <img src={FACTION_ICONS[fac]} alt={fac} width={32} height={32} decoding="async" />
+            <img
+              src={FACTION_ICONS[fac]}
+              alt={fac}
+              width={32}
+              height={32}
+              decoding="async"
+            />
             <span>{fac}</span>
           </div>
         ))}
       </div>
 
-      <h3>Enter Your Ships</h3>
+      <h3>
+        Enter Fleet &nbsp;
+        <small>(click arrow to adjust, click icon to toggle upgrade)</small>
+      </h3>
       <div className="upgrade-grid">
-        {shipList.map(({ key, stats }) => {
-        const cnt = counts[key] || 0;
-        return (
-            <CountCard
+        {shipList.map(({ key, stats }) => (
+          <CountCard
             key={key}
             icon={SHIP_ICONS[stats.type]}
             name={stats.name}
-            count={cnt}
+            count={counts[key] || 0}
             isUpgraded={!!upgraded[key]}
-            onIncrement={() => handleCount(key, cnt + 1)}
-            onDecrement={() => handleCount(key, Math.max(0, cnt - 1))}
+            onIncrement={() => handleIncrement(key)}
+            onDecrement={() => handleDecrement(key)}
             onToggleUpgrade={() => toggleUpgrade(key)}
-            />
-        );
-        })}
+          />
+        ))}
       </div>
 
-      <button onClick={() => setCounts(makeZeroCounts())}>Reset Fleet</button>
+      <button onClick={() => { setCounts(makeZeroCounts()); setUpgraded({}); }}>
+        Reset Fleet
+      </button>
 
       <div className="results">
         <div className="left">
-          <p><strong>Avg Hits:</strong> {result.hits.toFixed(2)} 💥</p>
-          <p><strong>AFB Hits:</strong> {result.afb.toFixed(2)} 🔥</p>
-          <p><strong>Durability:</strong> {result.hp} 🛡️</p>
+          <p>
+            <strong>Avg Hits / Round:</strong> {result.hits.toFixed(2)} 💥
+          </p>
+          <p>
+            <strong>AFB Hits:</strong> {result.afb.toFixed(2)} 🔥
+          </p>
+          <p>
+            <strong>Durability:</strong> {result.hp} 🛡️
+          </p>
         </div>
       </div>
     </>

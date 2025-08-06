@@ -92,7 +92,7 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
         ))}
       </div>
 
-      <h3>Unit Tech Upgrades</h3>
+      <h3>Select Unit Tech Upgrades</h3>
       <div className="faction-grid">
         {Object.entries(upgrades).map(([ship, on]) => {
           const base = SHIP_DATA[ship as keyof typeof SHIP_DATA];
@@ -115,7 +115,7 @@ export default function ConstraintsForm({ onCalculate }: { onCalculate(): void }
         })}
       </div>
 
-      <h3>Spacedock</h3>
+      <h3>Check if building at a Spacedock</h3>
       <div className="faction-grid">
         <div
           className={`faction-card ${spacedock ? "selected" : ""}`}
