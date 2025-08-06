@@ -106,9 +106,9 @@ export default function StatsCalculator() {
         }
 
         acc.hp += qty * eff.hitPoints;
-        if (eff.sustainDamage) {
-          acc.hp += qty;
-        }
+        // if (eff.sustainDamage) {
+        //   acc.hp += qty;
+        // }
         return acc;
       },
       { hits: 0, afb: 0, hp: 0 }
